@@ -13,8 +13,7 @@ import (
 )
 
 var (
-	mssrv = flag.String("srv", "localhost", "hostname of MS SQL server; use hostname\\instance_name to connect to a named instance")
-	//msdb   = flag.String("msdb", "tempdb", "ms sql server database name")
+	mssrv  = flag.String("srv", "localhost", "hostname of MS SQL server; use hostname\\instance_name to connect to a named instance")
 	msdb   = flag.String("msdb", "", "ms sql server database name")
 	msuser = flag.String("user", "", "user name to login the sql server instance; trusted connection is used if not specified ")
 	mspass = flag.String("passwd", "", "password of the SQL server user")
@@ -24,18 +23,20 @@ var (
 	//port = flag.String("port", "80", "web server port number")
 )
 
+// var dbConn *mssql.Conn
+
 func main() {
 	flag.Parse() //   SetupDB()
 
-	//log.Infof("*msdb %s, mssqlConn.DB %+v", *msdb, mssqlConn)
+	dbConn, err := mssql.NewConn(*mssrv, *msdb, *msuser, *mspass)
 
-	conn := mssql.Conn{
-		Host:   *mssrv,
-		DBName: *msdb,
-		Login:  *msuser,
-		Passwd: *mspass,
+	if dbConn == nil || err != nil {
+		log.Fatal(err)
 	}
-
-	CreateTables(&conn, *dop)
+	if log.V(2) {
+		log.Infof("DOP %d", *dop)
+		log.Flush()
+	}
+	migTables(dbConn, *dop)
 	log.Flush()
 }
